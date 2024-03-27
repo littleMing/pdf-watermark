@@ -29,6 +29,11 @@ enum WaterMarkType {
   IMAGE = 'IMAGE'
 }
 
+enum WaterMarkFontFamily {
+  WRYH = '微软雅黑',
+  ST = '宋体'
+}
+
 const waterMarkTypeOptions = [
   {
     value: WaterMarkType.TEXT,
@@ -40,10 +45,19 @@ const waterMarkTypeOptions = [
   }
 ]
 
+const waterMarkFontFamilyOptions = Object.entries(WaterMarkFontFamily).map(([key, value]) => {
+  return {
+    label: value,
+    value: value
+  }
+})
+
 
 const waterUnitWidth = 200
 const waterUnitHeight = 160
-const waterUnitPadding = 20
+const waterUnitPadding = 0
+const waterUnitPositionX = 0
+const waterUnitPositionY = 0
 
 const acceptImageType = ['png', 'jpeg', 'webp', 'svg+xml']
 const imageMaxSize = 1024 * 1024 / 2
@@ -59,16 +73,18 @@ const App: React.FC = () => {
   const [fileName, setFileName] = useState('')
   const [waterMarkType, setWaterMarkType] = useState<WaterMarkType>(WaterMarkType.TEXT)
   const [watermarkUnit, setWatermarkUnit] = useState<WatermarkUnitData | null>(null)
+  const [waterMarkFontFamily, setWaterMarkFontFamily] = useState<WaterMarkFontFamily>(WaterMarkFontFamily.WRYH)
   const [imageList, setImageList] = useState<ImageData[]>([])
   const [currentImage, setCurrentImage] = useState(0)
   const [currentPagesChunk, setCurrentPagesChunk] = useState(0)
   const [waterMarkValue, setWaterMarkValue] = useState<Array<string>>([''])
   const [watermarkSize, setWatermarkSize] = useState({ width: waterUnitWidth, height: waterUnitHeight })
+  const [watermarkPosition, setWatermarkPosition] = useState({ x: waterUnitPositionX, y: waterUnitPositionY })
   const [watermarkPreviewSize, setWatermarkPreviewSize] = useState(0)
-  const [textColor, setTextColor] = useState('rgba(80, 80, 80, 0.3)')
+  const [textColor, setTextColor] = useState('rgba(0, 0, 0, 1)')
   const [textSize, setTextSize] = useState(14)
   const [rotate, setRotate] = useState(0)
-  const [textPadding, setTextPadding] = useState(12)
+  const [textPadding, setTextPadding] = useState(waterUnitPadding)
   const [selectedPages, setSelectedPages] = useState<number[]>([])
   const [slideHidden, setSlideHidden] = useState(false)
   const [generateWatermarkUnitFinish, setGenerateWatermarkUnitFinish] = useState(false)
@@ -84,7 +100,7 @@ const App: React.FC = () => {
   const leftMainRef = useRef<HTMLDivElement>(null)
   const waterCoverRef = useRef<HTMLDivElement>(null)
   const pageWidth = useRef(0)
-  const devicePixelRatio = window.devicePixelRatio
+  const devicePixelRatio = window.devicePixelRatio * 2
   const scalePoint = 1600
 
   const reset = useCallback(() => {
@@ -227,16 +243,26 @@ const App: React.FC = () => {
         const rows = Math.ceil(height / watermarkHeight);
 
         // 在页面上重复绘制水印图片
-        for (let row = 0; row < rows; row++) {
-          for (let col = 0; col < columns; col++) {
-            page.drawImage(watermarkImage, {
-              x: col * watermarkWidth,
-              y: height - (watermarkHeight * (row + 1)),
-              width: watermarkWidth,
-              height: watermarkHeight,
-            });
-          }
-        }
+        // for (let row = 0; row < rows; row++) {
+        //   for (let col = 0; col < columns; col++) {
+        //     page.drawImage(watermarkImage, {
+        //       x: col * watermarkWidth,
+        //       y: height - (watermarkHeight * (row + 1)),
+        //       width: watermarkWidth,
+        //       height: watermarkHeight,
+        //     });
+        //   }
+        // }
+        page.drawImage(watermarkImage, {
+          x: watermarkPosition.x,
+          y: height - watermarkHeight - watermarkPosition.y,
+          width: watermarkWidth,
+          height: watermarkHeight,
+        });
+        // page.drawText(waterMarkValue.join('\n'), {
+        //   x: watermarkPosition.x,
+        //   y: height - watermarkHeight - watermarkPosition.y,
+        // })
       }
     }
     const pdfWithWatermarkBytes = await pdfDoc.save({ useObjectStreams: true });
@@ -412,6 +438,7 @@ const App: React.FC = () => {
               className='watermark_item'
               style={{
                 fontSize: `${textSize}px`,
+                lineHeight: `${textSize}px`,
                 color: `${textColor}`,
                 fontWeight: '400',
                 marginBottom: `${index === waterMarkValue.length - 1 ? 0 : textPadding}px`,
@@ -479,9 +506,9 @@ const App: React.FC = () => {
                           {selectedPages.includes(currentImage) && (
                             <div ref={waterCoverRef} className='watermark_cover'
                               style={{
+                                backgroundRepeat: 'no-repeat',
                                 backgroundImage: `url(${watermarkUnit?.base64Data})`,
-                                backgroundRepeat: 'repeat',
-                                backgroundPosition: '0px 0px',
+                                backgroundPosition: `${watermarkPosition.x}px ${watermarkPosition.y}px`,
                                 backgroundSize: `${watermarkPreviewSize * 100}% auto`,
                               }}>
                             </div>
@@ -508,7 +535,7 @@ const App: React.FC = () => {
               )}
               {!file && (
                 <div className="empty">
-                  <input ref={uploadInputRef} className="button_input" accept=".pdf" type="file" onChange={handleFileChange} />
+                  <input ref={uploadInputRef} className="button_input" accept=".pdf" type="file" onChange={handleFileChange} multiple/>
                   <Button icon={<UploadOutlined />} size="large" type="primary" onClick={handleUpload}>上传 PDF 文件</Button>
                 </div>
               )}
@@ -527,6 +554,7 @@ const App: React.FC = () => {
                   padding: `${waterUnitPadding}px`,
                   transform: `rotate(${-rotate}deg)`,
                   transformOrigin: 'center',
+                  fontFamily: `${waterMarkFontFamily}`
                 }}
                 ref={watermarkUnitRef}
               >
@@ -626,6 +654,19 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <div className="rule_item">
+                  <div className="rule_label">水印位置</div>
+                  <div className="rule_body">
+                    <div className="rule_size">
+                      <div className="rule_size_label">X</div>
+                      <InputNumber style={{ width: '60px' }} controls={false} onKeyDown={handlePreventKeyEvent} onChange={(value) => { setWatermarkPosition({ x: value || 0, y: watermarkPosition.y }) }} value={watermarkPosition.x} size="small"></InputNumber>
+                    </div>
+                    <div className="rule_size">
+                      <div className="rule_size_label">Y</div>
+                      <InputNumber style={{ width: '60px' }} controls={false} onKeyDown={handlePreventKeyEvent} onChange={(value) => { setWatermarkPosition({ x: watermarkPosition.x, y: value || 0 }) }} value={watermarkPosition.y} size="small"></InputNumber>
+                    </div>
+                  </div>
+                </div>
+                <div className="rule_item">
                   <div className="rule_label">旋转角度</div>
                   <InputNumber controls={false} onKeyDown={handlePreventKeyEvent} size="small" min={0} max={360} value={rotate} onChange={(value) => { if (value !== null) { setRotate(value) } }}></InputNumber>
                 </div>
@@ -638,6 +679,20 @@ const App: React.FC = () => {
                     <div className="rule_item">
                       <div className="rule_label">文字大小</div>
                       <InputNumber controls={false} onKeyDown={handlePreventKeyEvent} size="small" min={12} value={textSize} onChange={(value) => { if (value !== null) { setTextSize(value) } }}></InputNumber>
+                    </div>
+                    <div className="rule_item">
+                    <div className="rule_label">文字字体</div>
+                    <Select
+                      bordered={false}
+                      value={waterMarkFontFamily}
+                      style={{ marginLeft: '-7px' }}
+                      size="small"
+                      onChange={(value) => {
+                        setWaterMarkFontFamily(value)
+                      }}
+                      options={waterMarkFontFamilyOptions}
+                    >
+                    </Select>
                     </div>
                     <div className="rule_item">
                       <div className="rule_label">水印间距</div>
