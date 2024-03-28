@@ -2,6 +2,7 @@
   "name": "pdf-watermark",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
     "@babel/core": "^7.16.0",
@@ -75,7 +76,7 @@
   },
   "scripts": {
     "start": "node scripts/start.js",
-    "build": "PUBLIC_URL=/pdf-watermark/ node scripts/build.js",
+    "build": "node scripts/build.js PUBLIC_URL=/pdf-watermark/",
     "build-doc": "BUILD_PATH=docs PUBLIC_URL=/pdf-watermark/ node scripts/build.js",
     "test": "node scripts/test.js"
   },
