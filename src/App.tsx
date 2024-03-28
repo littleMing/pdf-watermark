@@ -100,8 +100,10 @@ const App: React.FC = () => {
   const leftMainRef = useRef<HTMLDivElement>(null)
   const waterCoverRef = useRef<HTMLDivElement>(null)
   const pageWidth = useRef(0)
-  const devicePixelRatio = window.devicePixelRatio * 2
+  const devicePixelRatio = window.devicePixelRatio
   const scalePoint = 1600
+
+  const { TextArea } = Input;
 
   const reset = useCallback(() => {
     setWaterMarkValue([''])
@@ -112,7 +114,7 @@ const App: React.FC = () => {
   }, [])
 
   // 防止输入框触发全局键盘事件
-  const handlePreventKeyEvent: React.KeyboardEventHandler<HTMLInputElement> = useCallback((event) => {
+  const handlePreventKeyEvent: React.KeyboardEventHandler<HTMLInputElement | HTMLTextAreaElement> = useCallback((event) => {
     event.stopPropagation()
   }, [])
 
@@ -213,7 +215,7 @@ const App: React.FC = () => {
     }, 300)
   }
   // 修改水印内容
-  const handleChangeText = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeText = (index: number, event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { value } = event.currentTarget
     waterMarkValue[index] = value
     setWaterMarkValue([...waterMarkValue])
@@ -253,12 +255,14 @@ const App: React.FC = () => {
         //     });
         //   }
         // }
-        page.drawImage(watermarkImage, {
+        const options = {
           x: watermarkPosition.x,
-          y: height - watermarkHeight - watermarkPosition.y,
+          y: height  - watermarkHeight - watermarkPosition.y,
           width: watermarkWidth,
           height: watermarkHeight,
-        });
+        }
+        console.log('options', options, height)
+        page.drawImage(watermarkImage, options);
         // page.drawText(waterMarkValue.join('\n'), {
         //   x: watermarkPosition.x,
         //   y: height - watermarkHeight - watermarkPosition.y,
@@ -611,6 +615,7 @@ const App: React.FC = () => {
               {
                 waterMarkType === WaterMarkType.TEXT && (
                   <div className="right_section_body text_body">
+                    {/* <TextArea rows={3} onChange={(event) => { handleChangeText(0, event) }} onKeyDown={handlePreventKeyEvent} placeholder="请输入水印文案"/> */}
                     {waterMarkValue.map((item, index) => {
                       return <div className="text_item">
                         <Input size="small" onKeyDown={handlePreventKeyEvent} style={{ flex: '1' }} placeholder="请输入水印文案" value={item} onChange={(event) => { handleChangeText(index, event) }}></Input>
@@ -685,7 +690,7 @@ const App: React.FC = () => {
                     <Select
                       bordered={false}
                       value={waterMarkFontFamily}
-                      style={{ marginLeft: '-7px' }}
+                      style={{ marginLeft: '-7px', width: '50%' }}
                       size="small"
                       onChange={(value) => {
                         setWaterMarkFontFamily(value)
@@ -720,6 +725,7 @@ const App: React.FC = () => {
                         padding: `${waterUnitPadding}px`,
                         transform: `rotate(${-rotate}deg)`,
                         transformOrigin: 'center',
+                        fontFamily: `${waterMarkFontFamily}`
                       }}
                     >
                       {waterUnitConttent}
