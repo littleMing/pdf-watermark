@@ -546,12 +546,13 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="watermark_unit">
+            <div className="right_section_title">水印单元预览</div>
             <div ref={watermarkUnitRef} style={{ overflow: 'hidden' }}>
               <div
                 style={{
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  alignItems: 'start',
+                  justifyContent: 'start',
                   flexDirection: 'column',
                   width: `${watermarkSize.width}px`,
                   height: `${watermarkSize.height}px`,
@@ -707,7 +708,7 @@ const App: React.FC = () => {
                 )}
               </div>
             </div>
-            <div className="right_section">
+            {/* <div className="right_section">
               <div className="right_section_title">
                 <div>水印单元预览</div>
               </div>
@@ -717,8 +718,8 @@ const App: React.FC = () => {
                     <div
                       style={{
                         display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        alignItems: 'start',
+                        justifyContent: 'start',
                         flexDirection: 'column',
                         width: `${watermarkSize.width}px`,
                         height: `${watermarkSize.height}px`,
@@ -733,7 +734,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
             {isWaterMarkDisaled ? (
               <Popover content="请先检查水印内容是否有填写">
                 <Button type="default" disabled style={{ width: '100%' }}>应用水印内容</Button>
