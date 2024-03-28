@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import classNames from 'classnames';
 import { PDFDocument } from 'pdf-lib'
-import { Button, Input, Checkbox, Pagination, Popover, Spin, message, ColorPicker, InputNumber, Select, Upload } from 'antd'
+import { Button, Input, Checkbox, Pagination, Popover, Spin, message, ColorPicker, InputNumber, Select, Upload, Switch  } from 'antd'
 import { DeleteFilled, GithubOutlined, MenuOutlined, MinusOutlined, PlusOutlined, RedoOutlined, UploadOutlined } from '@ant-design/icons'
 import { TransformComponent, TransformWrapper, ReactZoomPanPinchRef } from 'react-zoom-pan-pinch'
 import './App.css';
@@ -84,6 +84,7 @@ const App: React.FC = () => {
   const [textColor, setTextColor] = useState('rgba(0, 0, 0, 1)')
   const [textSize, setTextSize] = useState(14)
   const [rotate, setRotate] = useState(0)
+  const [isPreview, setIsPreview] = useState(true)
   const [textPadding, setTextPadding] = useState(waterUnitPadding)
   const [selectedPages, setSelectedPages] = useState<number[]>([])
   const [slideHidden, setSlideHidden] = useState(false)
@@ -545,7 +546,7 @@ const App: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="watermark_unit">
+          <div className="watermark_unit" style={{zIndex: isPreview ? 0 : -1}}>
             <div className="right_section_title">水印单元预览</div>
             <div ref={watermarkUnitRef} style={{ overflow: 'hidden' }}>
               <div
@@ -646,6 +647,10 @@ const App: React.FC = () => {
                 <div>水印配置</div>
               </div>
               <div className="right_section_body">
+              <div className="rule_item">
+                  <div className="rule_label">开启预览</div>
+                  <Switch onChange={(value) => { setIsPreview(value)}} value={isPreview}/>
+                </div>
                 <div className="rule_item">
                   <div className="rule_label">水印大小</div>
                   <div className="rule_body">
@@ -672,10 +677,10 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <div className="rule_item">
+                {/* <div className="rule_item">
                   <div className="rule_label">旋转角度</div>
                   <InputNumber controls={false} onKeyDown={handlePreventKeyEvent} size="small" min={0} max={360} value={rotate} onChange={(value) => { if (value !== null) { setRotate(value) } }}></InputNumber>
-                </div>
+                </div> */}
                 {waterMarkType === WaterMarkType.TEXT && (
                   <>
                     <div className="rule_item">

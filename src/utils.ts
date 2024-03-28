@@ -1,20 +1,23 @@
 import html2canvas from "html2canvas";
 
-export const getDomCanvas = async <T extends HTMLElement,>(dom: T, devicePixelRatio: number) => {
+export const getDomCanvas = async <T extends HTMLElement>(
+  dom: T,
+  devicePixelRatio: number
+) => {
   const canvasdom = document.createElement("canvas");
   const width = parseInt(`${dom.clientWidth}`, 10);
   const height = parseInt(`${dom.clientHeight}`, 10);
-  const scaleBy = devicePixelRatio;
+  const scaleBy = devicePixelRatio * 2;
   canvasdom.width = width * scaleBy;
   canvasdom.height = height * scaleBy;
   const canvas = await html2canvas(dom, {
     canvas: canvasdom,
     scale: scaleBy,
     backgroundColor: null,
-    useCORS: true
+    useCORS: true,
   });
-  return canvas
-}
+  return canvas;
+};
 
 export function chunkArray<T>(array: Array<T>, step: number) {
   const result = [];
