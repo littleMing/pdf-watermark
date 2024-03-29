@@ -33,6 +33,7 @@ import {
 import "./App.css";
 import { chunkArray, getDomCanvas } from "./utils";
 import { RcFile } from "antd/es/upload";
+import JSZip from 'jszip'
 const work = require("pdfjs-dist/build/pdf.worker");
 pdfjsLib.GlobalWorkerOptions.workerSrc = work;
 
@@ -284,7 +285,7 @@ const App: React.FC = () => {
     waterMarkValue.splice(index, 1);
     setWaterMarkValue([...waterMarkValue]);
   };
-  const handleSinglePdf = async (file: ArrayBuffer | string, fileName: string) => {
+  const handleSinglePdf = async (file: ArrayBuffer | string, fileName: string, zip: JSZip) => {
     const pdfDoc = await PDFDocument.load(file);
     if (!watermarkUnit?.bufferData) return;
     const watermarkImage = await pdfDoc.embedPng(watermarkUnit?.bufferData);
@@ -328,20 +329,29 @@ const App: React.FC = () => {
     const blob = new Blob([new Uint8Array(pdfWithWatermarkBytes)], {
       type: "application/pdf",
     });
-    const url = URL.createObjectURL(blob);
+    const newName = fileName.replaceAll(".pdf", "");
+    zip.file(`${newName}_watermark.pdf`, blob)
+
+  }
+  const doDownload = async (zip: JSZip) => {
+    const content = await zip.generateAsync({type: "blob"})
+
+    const url = URL.createObjectURL(content);
 
     const link = document.createElement("a");
     link.href = url;
-    const newName = fileName.replaceAll(".pdf", "");
-    link.download = `${newName}_watermark.pdf`;
+    link.download = `watermark.zip`;
     link.click();
     URL.revokeObjectURL(url);
+    // document.body.removeChild(link)
 
   }
   const handleDownload = async () => {
+    const zip = new JSZip()
     for (let i = 0; i < fileList.length; i++) {
-      await handleSinglePdf(fileList[i], fileNames[i])
+      await handleSinglePdf(fileList[i], fileNames[i], zip)
     }
+    doDownload(zip)
   };
 
   const handleChangeSelectedPage = (value: number) => {
@@ -552,7 +562,7 @@ const App: React.FC = () => {
           type="text"
           style={{ color: "white" }}
           onClick={() => {
-            window.open("https://github.com/zhengpq/pdf-watermark", "_blank");
+            window.open("https://github.com/littleMing/pdf-watermark", "_blank");
           }}
           icon={<GithubOutlined></GithubOutlined>}
         ></Button>
