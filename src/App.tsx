@@ -33,7 +33,7 @@ import {
 import "./App.css";
 import { chunkArray, getDomCanvas } from "./utils";
 import { RcFile } from "antd/es/upload";
-import JSZip from 'jszip'
+import JSZip from "jszip";
 const work = require("pdfjs-dist/build/pdf.worker");
 pdfjsLib.GlobalWorkerOptions.workerSrc = work;
 
@@ -95,6 +95,7 @@ const tips = [
 
 const App: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
+  const [enableMove, setEnableMove] = useState(false);
   const [file, setFile] = useState<ArrayBuffer | string>("");
   const [fileList, setFileList] = useState<(ArrayBuffer | string)[]>([]);
   const [fileName, setFileName] = useState("");
@@ -257,8 +258,8 @@ const App: React.FC = () => {
         const reader = new FileReader();
         reader.onload = (event) => {
           if (event.target?.result) {
-            fileList.push(event.target?.result)
-            fileNames.push(file.name)
+            fileList.push(event.target?.result);
+            fileNames.push(file.name);
             setFile(event.target?.result);
             setFileName(file.name);
           }
@@ -285,12 +286,16 @@ const App: React.FC = () => {
     waterMarkValue.splice(index, 1);
     setWaterMarkValue([...waterMarkValue]);
   };
-  const handleSinglePdf = async (file: ArrayBuffer | string, fileName: string, zip: JSZip) => {
+  const handleSinglePdf = async (
+    file: ArrayBuffer | string,
+    fileName: string,
+    zip: JSZip
+  ) => {
     const pdfDoc = await PDFDocument.load(file);
     if (!watermarkUnit?.bufferData) return;
     const watermarkImage = await pdfDoc.embedPng(watermarkUnit?.bufferData);
     for (let i = 0; i < pdfDoc.getPageCount(); i++) {
-      if (selectedPages.includes(i)) {
+      // if (selectedPages.includes(i)) {
         const page = pdfDoc.getPage(i);
         const { width, height } = page.getSize();
 
@@ -323,18 +328,17 @@ const App: React.FC = () => {
         //   x: watermarkPosition.x,
         //   y: height - watermarkHeight - watermarkPosition.y,
         // })
-      }
+      // }
     }
     const pdfWithWatermarkBytes = await pdfDoc.save({ useObjectStreams: true });
     const blob = new Blob([new Uint8Array(pdfWithWatermarkBytes)], {
       type: "application/pdf",
     });
     const newName = fileName.replaceAll(".pdf", "");
-    zip.file(`${newName}_watermark.pdf`, blob)
-
-  }
+    zip.file(`${newName}_watermark.pdf`, blob);
+  };
   const doDownload = async (zip: JSZip) => {
-    const content = await zip.generateAsync({type: "blob"})
+    const content = await zip.generateAsync({ type: "blob" });
 
     const url = URL.createObjectURL(content);
 
@@ -344,14 +348,13 @@ const App: React.FC = () => {
     link.click();
     URL.revokeObjectURL(url);
     // document.body.removeChild(link)
-
-  }
+  };
   const handleDownload = async () => {
-    const zip = new JSZip()
+    const zip = new JSZip();
     for (let i = 0; i < fileList.length; i++) {
-      await handleSinglePdf(fileList[i], fileNames[i], zip)
+      await handleSinglePdf(fileList[i], fileNames[i], zip);
     }
-    doDownload(zip)
+    doDownload(zip);
   };
 
   const handleChangeSelectedPage = (value: number) => {
@@ -368,11 +371,11 @@ const App: React.FC = () => {
 
   const handleClearFile = () => {
     setFile("");
-    setFileList([])
+    setFileList([]);
     setImageList([]);
     setCurrentImage(0);
     setFileName("");
-    setFileNames([])
+    setFileNames([]);
     setWatermarkPreviewSize(0);
     setCurrentPagesChunk(0);
     transformComponentRef.current?.resetTransform();
@@ -562,7 +565,10 @@ const App: React.FC = () => {
           type="text"
           style={{ color: "white" }}
           onClick={() => {
-            window.open("https://github.com/littleMing/pdf-watermark", "_blank");
+            window.open(
+              "https://github.com/littleMing/pdf-watermark",
+              "_blank"
+            );
           }}
           icon={<GithubOutlined></GithubOutlined>}
         ></Button>
@@ -635,6 +641,7 @@ const App: React.FC = () => {
             >
               {file && (
                 <TransformWrapper
+                  disabled={enableMove}
                   ref={transformComponentRef}
                   centerOnInit
                   centerZoomedOut
@@ -967,11 +974,21 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <div className="rule_item">
+                  <div className="rule_label">鼠标移动水印</div>
+                  <Switch
+                    onChange={(value) => {
+                      setEnableMove(value);
+                    }}
+                    value={enableMove}
+                  />
+                </div>
+                <div className="rule_item">
                   <div className="rule_label">水印位置</div>
                   <div className="rule_body">
                     <div className="rule_size">
                       <div className="rule_size_label">X</div>
                       <InputNumber
+                      disabled={enableMove}
                         style={{ width: "60px" }}
                         controls={false}
                         onKeyDown={handlePreventKeyEvent}
@@ -988,6 +1005,7 @@ const App: React.FC = () => {
                     <div className="rule_size">
                       <div className="rule_size_label">Y</div>
                       <InputNumber
+                      disabled={enableMove}
                         style={{ width: "60px" }}
                         controls={false}
                         onKeyDown={handlePreventKeyEvent}
