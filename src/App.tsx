@@ -96,6 +96,7 @@ const tips = [
 const App: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [enableMove, setEnableMove] = useState(false);
+  const [startMove, setStartMove] = useState(false);
   const [file, setFile] = useState<ArrayBuffer | string>("");
   const [fileList, setFileList] = useState<(ArrayBuffer | string)[]>([]);
   const [fileName, setFileName] = useState("");
@@ -296,38 +297,38 @@ const App: React.FC = () => {
     const watermarkImage = await pdfDoc.embedPng(watermarkUnit?.bufferData);
     for (let i = 0; i < pdfDoc.getPageCount(); i++) {
       // if (selectedPages.includes(i)) {
-        const page = pdfDoc.getPage(i);
-        const { width, height } = page.getSize();
+      const page = pdfDoc.getPage(i);
+      const { width, height } = page.getSize();
 
-        // 计算水印图片的行数和列数，以便铺满整个页面
-        const watermarkWidth = watermarkSize.width;
-        const watermarkHeight = watermarkSize.height;
-        const columns = Math.ceil(width / watermarkWidth);
-        const rows = Math.ceil(height / watermarkHeight);
+      // 计算水印图片的行数和列数，以便铺满整个页面
+      const watermarkWidth = watermarkSize.width;
+      const watermarkHeight = watermarkSize.height;
+      const columns = Math.ceil(width / watermarkWidth);
+      const rows = Math.ceil(height / watermarkHeight);
 
-        // 在页面上重复绘制水印图片
-        // for (let row = 0; row < rows; row++) {
-        //   for (let col = 0; col < columns; col++) {
-        //     page.drawImage(watermarkImage, {
-        //       x: col * watermarkWidth,
-        //       y: height - (watermarkHeight * (row + 1)),
-        //       width: watermarkWidth,
-        //       height: watermarkHeight,
-        //     });
-        //   }
-        // }
-        const options = {
-          x: watermarkPosition.x,
-          y: height - watermarkHeight - watermarkPosition.y,
-          width: watermarkWidth,
-          height: watermarkHeight,
-        };
-        console.log("options", options, height);
-        page.drawImage(watermarkImage, options);
-        // page.drawText(waterMarkValue.join('\n'), {
-        //   x: watermarkPosition.x,
-        //   y: height - watermarkHeight - watermarkPosition.y,
-        // })
+      // 在页面上重复绘制水印图片
+      // for (let row = 0; row < rows; row++) {
+      //   for (let col = 0; col < columns; col++) {
+      //     page.drawImage(watermarkImage, {
+      //       x: col * watermarkWidth,
+      //       y: height - (watermarkHeight * (row + 1)),
+      //       width: watermarkWidth,
+      //       height: watermarkHeight,
+      //     });
+      //   }
+      // }
+      const options = {
+        x: watermarkPosition.x,
+        y: height - watermarkHeight - watermarkPosition.y,
+        width: watermarkWidth,
+        height: watermarkHeight,
+      };
+      console.log("options", options, height);
+      page.drawImage(watermarkImage, options);
+      // page.drawText(waterMarkValue.join('\n'), {
+      //   x: watermarkPosition.x,
+      //   y: height - watermarkHeight - watermarkPosition.y,
+      // })
       // }
     }
     const pdfWithWatermarkBytes = await pdfDoc.save({ useObjectStreams: true });
@@ -556,6 +557,39 @@ const App: React.FC = () => {
     </>
   );
 
+  const onTouchStart = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!startMove && enableMove) {
+      setStartMove(true);
+    }
+  };
+
+  const onTouchMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (startMove && enableMove) {
+      const { clientX, clientY, movementX, movementY } = event;
+      // const scale = transformComponentRef.current?.state?.scale || 1;
+      setWatermarkPosition({
+        x: watermarkPosition.x + movementX,
+        y: watermarkPosition.y + movementY,
+      });
+      // const rect = waterCoverRef.current?.getBoundingClientRect()
+      // if (rect) {
+      //   const divX = rect?.left
+      //   const divY = rect?.top
+
+      //   console.log('divX', divX, 'divY', divY, 'clientX', clientX, 'clientY', clientY)
+      //   console.log(clientX - divX, clientY - divY)
+      //   setWatermarkPosition({
+      //     x: clientX - divX,
+      //     y: clientY - divY
+      //   })
+      // }
+    }
+  };
+
+  const onTouchEnd = (event: React.MouseEvent<HTMLDivElement>) => {
+    setStartMove(false);
+  };
+
   return (
     <div className="app">
       {contextHolder}
@@ -580,7 +614,7 @@ const App: React.FC = () => {
               left_inner_active: !!imageList[currentImage],
             })}
           >
-            {imageList.length > 0 && (
+            {/* {imageList.length > 0 && (
               <div
                 style={{
                   width: slideHidden ? "0px" : "193px",
@@ -632,7 +666,7 @@ const App: React.FC = () => {
                   )}
                 </div>
               </div>
-            )}
+            )} */}
             <div
               ref={leftMainRef}
               className={classNames("left_main", {
@@ -672,6 +706,10 @@ const App: React.FC = () => {
                             </div>
                             {selectedPages.includes(currentImage) && (
                               <div
+                                onMouseDown={onTouchStart}
+                                onMouseMove={onTouchMove}
+                                onMouseUp={onTouchEnd}
+                                onMouseLeave={onTouchEnd}
                                 ref={waterCoverRef}
                                 className="watermark_cover"
                                 style={{
@@ -803,6 +841,7 @@ const App: React.FC = () => {
                   >
                     <div
                       className="file_name"
+                      title={fileNames.join(";")}
                       style={{
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -810,7 +849,7 @@ const App: React.FC = () => {
                         textAlign: "left",
                       }}
                     >
-                      {fileName}
+                      {fileNames.join(";")}
                     </div>
                     <div className="file_name_operator">
                       <Button
@@ -988,7 +1027,7 @@ const App: React.FC = () => {
                     <div className="rule_size">
                       <div className="rule_size_label">X</div>
                       <InputNumber
-                      disabled={enableMove}
+                        disabled={enableMove}
                         style={{ width: "60px" }}
                         controls={false}
                         onKeyDown={handlePreventKeyEvent}
@@ -1005,7 +1044,7 @@ const App: React.FC = () => {
                     <div className="rule_size">
                       <div className="rule_size_label">Y</div>
                       <InputNumber
-                      disabled={enableMove}
+                        disabled={enableMove}
                         style={{ width: "60px" }}
                         controls={false}
                         onKeyDown={handlePreventKeyEvent}
